@@ -1,103 +1,75 @@
-import turtle as tr 
-from tkinter import simpledialog,messagebox
+import pygame
 import random
+import math
 
-def rect(pos,size):
-    tr.up()
-    tr.goto(pos)
-    tr.down()
+# Define constants
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
+DOT_RADIUS = 3
+MIN_DISTANCE = 200
 
-    tr.begin_fill()
-    for _ in range(2):
-        tr.forward(size[0])
-        tr.right(90)
-        tr.forward(size[1])
-        tr.right(90)
-    tr.end_fill()
-    tr.down()
+# Define colors
+BLACK = (0, 0, 0)
+BLUE = (0, 0, 255)
 
+# Function to calculate distance between two points
+def distance(p1, p2):
+    return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
 
-def move(pos):
-    tr.up()
-    tr.goto(pos[0],pos[1])
-    tr.down()
+# Function to draw a line between two points
+def draw_line(screen, p1, p2):
+    pygame.draw.line(screen, BLACK, p1, p2, 1)
 
+# Function to generate random dots
+def generate_dots(num_dots):
+    dots = []
+    for _ in range(num_dots):
+        dots.append((random.randint(50, WINDOW_WIDTH - 50), random.randint(50, WINDOW_HEIGHT - 50)))
+    return dots
 
-def randamizeDot(n=20,show=False):
-    position=[(random.randint(50,800),random.randint(50,600)) for _ in range(n)]
+# Function to connect nearby dots
+def connect_dots(screen, dots):
+    for i, dot1 in enumerate(dots):
+        for dot2 in dots[i+1:]:
+            if distance(dot1, dot2) <= MIN_DISTANCE:
+                draw_line(screen, dot1, dot2)
 
-    if show:
-        for pos in position:
-            move(pos)
-            tr.begin_fill()
-            tr.circle(1)
-            tr.end_fill()
-    
-    return position
-
-
-def graph(position,minDis=200):
-    size=len(position)
-    gmatrix=[[] for i in range(size)]
-
-    for node in range(size):
-        gmatrix[node].append(position[node])
-        for i in range(size):
-            if abs(position[node][0]-position[i][0]) <= minDis and abs(position[node][1]-position[i][1]) <= minDis:
-                gmatrix[node].append(position[i])
-    return gmatrix
-
-
-def drawGraph(gmatrix):
-    relation=[]
-    for row in gmatrix:
-        tr.up()
-        tr.goto(row[0])
-        tr.down()
-        edges=0
-        for i in range(1,len(row)):
-            # line(row[0],row[i])
-            tr.goto(row[i][0],row[i][1])
-            edges+=1
-        relation.append((row[0],edges))
-    return relation
-
-
-def update_coordinates(x,y):
-    tr.title("Coordinates: ({}, {})".format(x, y))
-
-
-#**************************************************************
-def GRAPHart():
-    n=simpledialog.askinteger("vertices","Enter no of vertices: ")
-    minDis=simpledialog.askfloat("minDis","Enter minimum distance to join 2 vertices: ")
-
-    instances = randamizeDot(n,True)
-    Graph = graph(instances,minDis)
-    relation=drawGraph(Graph)
-
-    print(relation)
-    messagebox.showinfo("Graph Result{{vertex},edges}",relation)
-    # print(instances,"\n\n")
-    # print(Graph)
-    tr.done()
-#***************************************************************
-
+# Main function
 def main():
-    window = tr.Screen()
-    window.setup(800,600)
-    window.setworldcoordinates(0,800,600,0)
-    tr.onscreenclick(update_coordinates)
-    window.title("My Turtle Window")
-    window.bgcolor("white")
-    tr.colormode(255)
-    tr.speed(0)
+    # Initialize Pygame
+    pygame.init()
+    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    pygame.display.set_caption("Graph Animation")
+    clock = pygame.time.Clock()
 
-    GRAPHart()
+    # Generate random dots
+    dots = generate_dots(20)
 
-    # Keep the window open until it's manually closed
-    window.mainloop()
+    # Main loop
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
+        # Clear the screen
+        screen.fill((255, 255, 255))
 
-if __name__=="__main__":
+        # Connect nearby dots
+        connect_dots(screen, dots)
+
+        # Draw dots
+        for dot in dots:
+            pygame.draw.circle(screen, BLUE, dot, DOT_RADIUS)
+
+        # Update the display
+        pygame.display.flip()
+
+        # Cap the frame rate
+        clock.tick(60)
+
+    # Quit Pygame
+    pygame.quit()
+
+if __name__ == "__main__":
     main()
